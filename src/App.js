@@ -3,12 +3,13 @@ import axios from "axios";
 import './App.css'; 
 
 type Person = any;
+type Location = any;  
 
 const fetchData = () => {
   return axios.get('https://randomuser.me/api/?results=20')
   .then((res) => {
     const {results} = res.data;
-    console.log(results);
+    // console.log(results);
     return results;
   })
   .catch((err) => {
@@ -16,12 +17,21 @@ const fetchData = () => {
   })
 }
 
+const flattenLocations = (locations:Location[]) => {
+  console.log(locations);
+  
+}
+
 function App() {
   const [people, setPeople] = useState([]);
+  const [flattenedLocations, setFlattenedLocations] = useState([]);
 
   useEffect(() => {
     fetchData().then(apiPeople => {
       setPeople(apiPeople);
+      setFlattenedLocations(
+        flattenLocations(apiPeople.map(({ location }) => location))
+      );
     });
   }, [])
 
@@ -29,9 +39,9 @@ function App() {
     <div className="App">
       <h1>Hello Manu!!</h1>
       <h2>Start editing to see some magic happen</h2>
-      {people.map((person: Person, personIdx) => <div key={personIdx}>
-        {person.name.first}
-      </div>)}
+      {people.map((person: Person, personIdx) => (
+      <div key={personIdx}>{person.name.first}</div>
+      ))}
     </div>
   );
 }
