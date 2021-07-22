@@ -17,15 +17,23 @@ const fetchData = () => {
   })
 }
 
-const flattenLocations = (locations:Location[]) => {
+const flattenLocations = (locations: Location[]) => {
   const location = locations[0];
   console.log(locations);
-  const flattenedLocationHeaders = extractObjectKeys(location);
-  
-  
+  const data = []
+  for (const {street, coordinates, timezone, ...rest} of locations)
+    data.push({
+      ...rest,
+      number: street.number,
+      name: street.name,
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude,
+    })
 
+  const flattenedLocationHeaders = extractObjectKeys(data[0]);
+  return { headers: flattenedLocationHeaders, data };
   console.log(flattenedLocationHeaders)
-}
+} 
 
 const extractObjectKeys = (object: any) => {
   let objectKeys: string[] = [];
@@ -44,7 +52,7 @@ return objectKeys;
 
 function App() {
   const [people, setPeople] = useState([]);
-  const [flattenedLocations, setFlattenedLocations] = useState([]);
+  const [flattenedLocations, setFlattenedLocations] = useState({headers: [], data: []});
 
   useEffect(() => {
     fetchData().then(apiPeople => {
@@ -54,14 +62,30 @@ function App() {
       );
     });
   }, [])
-
+ 
   return (
     <div className="App">
       <h1>Hello Manu!!</h1>
       <h2>Start editing to see some magic happen</h2>
-      {people.map((person: Person, personIdx) => (
-      <div key={personIdx}>{person.name.first}</div>
-      ))}
+      <table>
+        <thead>
+          <tr>
+          {flattenedLocations.headers.map((locationString: string, locationIdx) => (
+          <th key={locationIdx}>{locationString}</th>
+          ))}
+          </tr>
+        </thead>
+        <tbody>
+          {flattenedLocations.data.map((location: any, locationIdx) => (
+            <tr key={locationIdx}>
+              {flattenedLocations.headers.map((header, headerIdx) => (
+                <td key={headerIdx}>{location[header]}</td>
+              ))} 
+            </tr>
+          ))}
+        </tbody>
+      </table> 
+      
     </div>
   );
 }
