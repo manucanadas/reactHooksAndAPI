@@ -20,16 +20,26 @@ const fetchData = () => {
 const flattenLocations = (locations:Location[]) => {
   const location = locations[0];
   console.log(locations);
-  const flattenedLocationHeaders = [];
-  Object.keys(location).forEach(locationKey => {
-    const value = location[locationKey];
-    if (typeof value !== 'object') {
-      flattenedLocationHeaders.push(locationKey);
-    }
-  })
+  const flattenedLocationHeaders = extractObjectKeys(location);
+  
+  
 
   console.log(flattenedLocationHeaders)
-  
+}
+
+const extractObjectKeys = (object: any) => {
+  let objectKeys: string[] = [];
+
+  Object.keys(object).forEach(objectKey => {
+    const value = object[objectKey];
+    if (typeof value !== 'object') {
+      objectKeys.push(objectKey);
+    } else {
+      objectKeys = [...objectKeys, ...extractObjectKeys(value)];
+    }
+})
+
+return objectKeys;
 }
 
 function App() {
