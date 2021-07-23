@@ -81,10 +81,17 @@ const getNextSortingDirection = (sortingDirection: SortingDirection) => {
 return SortingDirection.ASCENDING;
 }
 
+const getFilteredRows = (rows: any[], filterKey: string) => {
+  return rows.filter((row: any) => {
+    return Object.values(row).some(s => (''+s).toLowerCase().includes(filterKey))
+  });
+}
+
 function App() {
   const [people, setPeople] = useState([]);
   const [flattenedLocations, setFlattenedLocations] = useState({headers: [], data: []});
-  const [sortingDirections, setSortingDirections] = useState({})
+  const [sortingDirections, setSortingDirections] = useState({});
+  const [inputFieldValue, setInputFieldValue] = useState('');
 
   const sortColumn = (sortKey) => {
     console.log(sortKey);
@@ -125,6 +132,9 @@ function App() {
     <div className="App">
       <h1>Hello Manu!!</h1>
       <h2>Start editing to see some magic happen</h2>
+      <input value={inputFieldValue} onChange={(e) => {
+        setInputFieldValue(e.target.value);
+      }}/>
       <table>
         <thead>
           <tr>
@@ -141,7 +151,7 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {flattenedLocations.data.map((location: any, locationIdx) => (
+          {getFilteredRows(flattenedLocations.data, inputFieldValue).map((location: any, locationIdx) => (
             <tr key={locationIdx}>
               {flattenedLocations.headers.map((header, headerIdx) => (
                 <td key={headerIdx}>{location[header]}</td>
