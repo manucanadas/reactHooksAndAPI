@@ -5,6 +5,13 @@ import './App.css';
 type Person = any;
 type Location = any;  
 
+const SortingDirection = {
+  ASCENDING : 'ASCENDING',
+  DESCENDING : 'DESCENDING',
+  UNSORTED : 'UNSORTED',
+
+}
+
 const fetchData = () => {
   return axios.get('https://randomuser.me/api/?results=20')
   .then((res) => {
@@ -19,7 +26,7 @@ const fetchData = () => {
 
 const flattenLocations = (locations: Location[]) => {
   const location = locations[0];
-  console.log(locations);
+  // console.log(locations);
   const data = []
   for (const {street, coordinates, timezone, ...rest} of locations)
     data.push({
@@ -32,7 +39,7 @@ const flattenLocations = (locations: Location[]) => {
 
   const flattenedLocationHeaders = extractObjectKeys(data[0]);
   return { headers: flattenedLocationHeaders, data };
-  console.log(flattenedLocationHeaders)
+  // console.log(flattenedLocationHeaders)
 } 
 
 const extractObjectKeys = (object: any) => {
@@ -48,18 +55,69 @@ const extractObjectKeys = (object: any) => {
 })
 
 return objectKeys;
+};
+
+const sortData = (data: any, sortKey: string, sortingDirection: SortingDirection) => {
+data.sort((a: any, b: any) => {
+  const relevantValueA = a[sortKey];
+  const relevantValueB = b[sortKey];
+
+  if (sortingDirection === SortingDirection.UNSORTED || sortingDirection === SortingDirection.ASCENDING) {
+    if (relevantValueA < relevantValueB) return -1;
+    if (relevantValueA > relevantValueB) return 1;
+    return 0;
+  } else {
+    if (relevantValueA > relevantValueB) return -1;
+    if (relevantValueA < relevantValueB) return 1;
+    return 0;
+  }
+});
+}
+
+const getNextSortingDirection = (sortingDirection: SortingDirection) => {
+  if (sortingDirection === SortingDirection.UNSORTED || sortingDirection === SortingDirection.ASCENDING) {
+    return SortingDirection.DESCENDING;
+}
+return SortingDirection.ASCENDING;
 }
 
 function App() {
   const [people, setPeople] = useState([]);
   const [flattenedLocations, setFlattenedLocations] = useState({headers: [], data: []});
+  const [sortingDirections, setSortingDirections] = useState({})
+
+  const sortColumn = (sortKey) => {
+    console.log(sortKey);
+    const newFlattenedLocations = {
+      ...flattenedLocations,
+      data: [...flattenedLocations.data]
+    };
+
+    const currentSortingDirection = sortingDirections[sortKey];
+
+    sortData(newFlattenedLocations.data, sortKey, currentSortingDirection);
+    const nextSortingDirection = getNextSortingDirection(currentSortingDirection);
+    
+    const newSortingDirections = {...sortingDirections};
+    newSortingDirections[sortKey] = nextSortingDirection;
+
+    setFlattenedLocations(newFlattenedLocations);
+    setSortingDirections(newSortingDirections);
+  };
 
   useEffect(() => {
     fetchData().then(apiPeople => {
       setPeople(apiPeople);
-      setFlattenedLocations(
-        flattenLocations(apiPeople.map(({ location }) => location))
-      );
+      const ourFlattenedLocations = flattenLocations(
+        apiPeople.map(({ location }) => location)
+        );
+      setFlattenedLocations(ourFlattenedLocations);
+      const {headers} = ourFlattenedLocations;
+      const ourSortingDirections = {};
+      for (const header of headers) {
+        ourSortingDirections[headers] = SortingDirection.UNSORTED;
+      }
+      setSortingDirections(ourSortingDirections);
     });
   }, [])
  
@@ -71,7 +129,14 @@ function App() {
         <thead>
           <tr>
           {flattenedLocations.headers.map((locationString: string, locationIdx) => (
-          <th key={locationIdx}>{locationString}</th>
+          <th 
+          key={locationIdx} 
+          onClick={() => {
+            sortColumn(locationString);
+          }}
+          >
+            {locationString}
+            </th>
           ))}
           </tr>
         </thead>
